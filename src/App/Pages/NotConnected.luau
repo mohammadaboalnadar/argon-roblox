@@ -33,23 +33,29 @@ type Props = {
 	Port: number,
 }
 
-local function getValue(setting: Config.Setting, value: any): string
-	return value ~= Config:getDefault(setting) and value or ""
+local function getValue(setting: Config.Setting, value: any, input: boolean?): string
+	if input then
+		return value ~= Config:getDefault(setting) and value or ""
+	else
+		return value ~= "" and value or Config:getDefault(setting)
+	end
 end
 
 return function(props: Props): { Instance }
-	local hostInput = Value(getValue("Host", props.Host))
-	local portInput = Value(getValue("Port", props.Port))
+	local hostInput = Value(getValue("Host", props.Host, true))
+	local portInput = Value(getValue("Port", props.Port, true))
 
 	local hostFocused = Value(false)
 	local portFocused = Value(false)
 
 	local connections = {
 		Config:onChanged("Host", function(value)
-			hostInput:set(getValue("Host", value))
+			hostInput:set(getValue("Host", value, true))
+			props.App:setHost(getValue("Host", value))
 		end),
 		Config:onChanged("Port", function(value)
-			portInput:set(getValue("Port", value))
+			portInput:set(getValue("Port", value, true))
+			props.App:setPort(getValue("Port", value))
 		end),
 	}
 
@@ -69,7 +75,7 @@ return function(props: Props): { Instance }
 				Theme.SpringFastSpeed,
 				Theme.SpringDamping
 			),
-
+			[Cleanup] = connections,
 			[Children] = {
 				List {
 					Spacing = 4,
@@ -79,22 +85,18 @@ return function(props: Props): { Instance }
 				Input {
 					Size = UDim2.fromScale(0.75, 1),
 					Font = Theme.Fonts.Mono,
-					PlaceholderText = "localhost",
+					PlaceholderText = Config:getDefault("Host"),
 					Text = hostInput,
-
 					Started = function()
 						hostFocused:set(true)
 					end,
-
 					Changed = function(text)
 						hostInput:set(filterHost(text))
 					end,
-
 					Finished = function(host)
 						hostFocused:set(false)
-						props.App:setHost(host ~= "" and host or Config:getDefault("Host"))
+						props.App:setHost(getValue("Host", host))
 					end,
-
 					[Children] = {
 						-- The cursor will not be visible when it is all the way at the left because of ClipsDescendants,
 						-- so this padding makes sure there's always 1 pixel of space from the left.
@@ -120,20 +122,17 @@ return function(props: Props): { Instance }
 					Position = UDim2.fromScale(1, 0),
 					Size = UDim2.fromScale(0, 1),
 					Font = Theme.Fonts.Mono,
-					PlaceholderText = "8000",
+					PlaceholderText = Config:getDefault("Port"),
 					Text = portInput,
-
 					Started = function()
 						portFocused:set(true)
 					end,
-
 					Changed = function(text)
 						portInput:set(filterPort(text))
 					end,
-
 					Finished = function(port)
 						portFocused:set(false)
-						props.App:setPort(port ~= "" and tonumber(port) or Config:getDefault("Port"))
+						props.App:setPort(getValue("Port", port))
 					end,
 				},
 				Padding {
@@ -141,7 +140,6 @@ return function(props: Props): { Instance }
 					Vertical = false,
 				},
 			},
-			[Cleanup] = connections,
 		},
 		Container {
 			Size = UDim2.fromScale(1, 0),

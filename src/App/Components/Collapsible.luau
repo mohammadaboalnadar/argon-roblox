@@ -32,12 +32,14 @@ local peek = Fusion.peek
 
 local COMPONENT_ONLY_PROPS = {
 	"Title",
+	"Color",
 	"Expanded",
 	"Elements",
 }
 
 type Props = {
 	Title: string,
+	Color: Fusion.CanBeState<Color3>?,
 	Expanded: boolean?,
 	Elements: { Instance },
 }
@@ -62,7 +64,9 @@ return function(props: Props): Frame
 	)
 
 	return Hydrate(Box {
-		ClipsDescendants = true,
+		ClipsDescendants = Computed(function(use)
+			return not use(isExpanded)
+		end),
 		AutomaticSize = Enum.AutomaticSize.None,
 		Size = Spring(
 			Computed(function(use)
@@ -70,14 +74,12 @@ return function(props: Props): Frame
 			end),
 			30
 		),
-
 		[Children] = {
 			New "TextButton" {
 				Text = "",
 				AutoButtonColor = false,
 				Size = UDim2.new(1, 0, 0, Theme.CompSizeY.Large),
 				BackgroundColor3 = color,
-
 				[OnEvent "InputBegan"] = function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						isHovered:set(true)
@@ -95,7 +97,6 @@ return function(props: Props): Frame
 				[OnEvent "Activated"] = function()
 					isExpanded:set(not peek(isExpanded))
 				end,
-
 				[Children] = {
 					Corner {},
 					Container {
@@ -108,16 +109,14 @@ return function(props: Props): Frame
 								TextSize = Theme.TextSize.Large,
 								TextXAlignment = Enum.TextXAlignment.Left,
 								Size = UDim2.fromScale(1, 1),
-								Color = Computed(function(use)
-									return use(Theme.Colors.Text)
-								end),
+								Color = props.Color or Theme.Colors.Text,
 							},
 							Image {
 								AnchorPoint = Vector2.new(1, 0.5),
 								Position = UDim2.fromScale(1, 0.5),
 								Size = UDim2.fromOffset(16, 16),
 								Image = Assets.Icons.Expand,
-								ImageColor3 = Theme.Colors.Text,
+								ImageColor3 = props.Color or Theme.Colors.Text,
 								Rotation = Spring(
 									Computed(function(use)
 										return use(isExpanded) and 180 or 0

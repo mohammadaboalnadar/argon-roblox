@@ -19,10 +19,12 @@ local Container = require(Components.Container)
 local Padding = require(Components.Padding)
 local Corner = require(Components.Corner)
 local Image = require(Components.Image)
+local Input = require(Components.Input)
 local List = require(Components.List)
 local Box = require(Components.Box)
 
 local New = Fusion.New
+local Ref = Fusion.Ref
 local Value = Fusion.Value
 local Spring = Fusion.Spring
 local Hydrate = Fusion.Hydrate
@@ -38,6 +40,7 @@ local peek = Fusion.peek
 local BUTTON_COMPONENT_ONLY_PROPS = {
 	"Activated",
 	"IsSelected",
+	"IsDimmed",
 	"IsFirst",
 	"IsLast",
 }
@@ -45,6 +48,7 @@ local BUTTON_COMPONENT_ONLY_PROPS = {
 type ButtonProps = {
 	Activated: () -> (),
 	IsSelected: Fusion.Computed<boolean>,
+	IsDimmed: Fusion.Computed<boolean>,
 	IsFirst: Fusion.Value<boolean>?,
 	IsLast: boolean,
 	[any]: any,
@@ -94,9 +98,10 @@ local function Button(props: ButtonProps): TextButton
 		TextXAlignment = Enum.TextXAlignment.Left,
 		BackgroundColor3 = color,
 		TextColor3 = Computed(function(use)
-			return use(props.IsSelected) and use(Theme.Colors.TextBranded) or use(Theme.Colors.Text)
+			return use(props.IsSelected) and use(Theme.Colors.TextBranded)
+				or use(props.IsDimmed) and use(Theme.Colors.TextDimmed)
+				or use(Theme.Colors.Text)
 		end),
-
 		[OnEvent "InputBegan"] = function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				isHovered:set(true)
@@ -119,7 +124,6 @@ local function Button(props: ButtonProps): TextButton
 
 			props.Activated()
 		end,
-
 		[Cleanup] = disconnect,
 		[Children] = GlobalUtil.join(
 			{
@@ -161,19 +165,24 @@ local COMPONENT_ONLY_PROPS = {
 	"Selected",
 	"Options",
 	"Value",
+	"Placeholder",
 }
 
 type Props = {
 	Selected: ((option: string) -> ())?,
 	Options: { string },
-	Value: Fusion.CanBeState<boolean>?,
+	Value: Fusion.CanBeState<string>?,
+	Placeholder: Fusion.CanBeState<string>?,
 	[any]: any,
 }
 
 return function(props: Props): TextButton
 	local value = isState(props.Value) and props.Value or Value(props.Value or props.Options[1])
+	local placeholder = isState(props.Placeholder) and props.Placeholder or Value(props.Placeholder or props.Options[1])
+
 	local isOpen = Value(false)
 	local anchor = Value(0)
+	local ref = Value(nil)
 
 	local size
 	do
@@ -193,7 +202,6 @@ return function(props: Props): TextButton
 	return Hydrate(Container {
 		AutomaticSize = Enum.AutomaticSize.None,
 		Size = size,
-
 		[Children] = {
 			Padding {
 				Padding = 6,
@@ -210,17 +218,23 @@ return function(props: Props): TextButton
 					return use(isOpen) and 1 or 0
 				end),
 			},
+			Input {
+				Finished = function()
+					task.delay(0.1, function()
+						isOpen:set(false)
+					end)
+				end,
+				[Ref] = ref,
+			},
 			Box {
 				ClipsDescendants = true,
 				AutomaticSize = Enum.AutomaticSize.None,
-
 				Size = Spring(
 					Computed(function(use)
 						return UDim2.new(1, 12, use(isOpen) and #props.Options or 1, 0)
 					end),
 					40
 				),
-
 				AnchorPoint = Computed(function(use)
 					if use(isOpen) then
 						local index = table.find(props.Options, peek(value))
@@ -229,15 +243,12 @@ return function(props: Props): TextButton
 
 					return Vector2.new(0.5, peek(anchor))
 				end),
-
 				Position = Computed(function(use)
 					return UDim2.fromScale(0.5, use(isOpen) and 0 or use(anchor))
 				end),
-
 				[Children] = {
 					Container {
 						Size = UDim2.fromScale(1, #props.Options),
-
 						[Children] = {
 							List {
 								Spacing = 0,
@@ -253,14 +264,19 @@ return function(props: Props): TextButton
 											return option
 										end
 									end),
-
 									IsSelected = Computed(function(use)
-										return use(value) == option and use(isOpen)
+										return use(isOpen) and use(value) == option
 									end),
-
+									IsDimmed = Computed(function(use)
+										return not use(isOpen) and use(value) ~= use(placeholder)
+									end),
 									Activated = function()
 										local open = peek(isOpen)
 										isOpen:set(not open)
+
+										if not open then
+											peek(ref):CaptureFocus()
+										end
 
 										if not open or option == peek(value) then
 											return
@@ -272,7 +288,6 @@ return function(props: Props): TextButton
 											props.Selected(option)
 										end
 									end,
-
 									IsFirst = isFirst and isOpen or nil,
 									IsLast = option == props.Options[#props.Options],
 								}

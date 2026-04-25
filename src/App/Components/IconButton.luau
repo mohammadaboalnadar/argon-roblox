@@ -63,7 +63,6 @@ return function(props: Props): TextButton
 		Text = "",
 		AutoButtonColor = false,
 		BackgroundColor3 = color,
-
 		[OnEvent "InputBegan"] = function(inputObject)
 			if inputObject.UserInputType == Enum.UserInputType.MouseMovement then
 				isHovered:set(true)
@@ -83,13 +82,8 @@ return function(props: Props): TextButton
 				props.Activated()
 			end
 		end,
-
 		[Children] = {
-			Border {
-				Color = Computed(function(use)
-					return use(props.Solid) and use(color) or use(Theme.Colors.Border)
-				end),
-			},
+			Border {},
 			Image {
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				Position = UDim2.fromScale(0.5, 0.5),

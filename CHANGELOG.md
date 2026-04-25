@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.21] - 2026-03-04
+
+### Added
+
+- Implemented the `Diff` widget which allows viewing incoming changes in detail ([#20](https://github.com/argon-rbx/argon-roblox/pull/20))
+
+### Fixed
+
+- Newly created files no longer appear twice in Studio when two-way sync is enabled ([#21](https://github.com/argon-rbx/argon-roblox/pull/21))
+
+### Changed
+
+- Config levels are now loaded hierarchically with settings UI updated accordingly ([#19](https://github.com/argon-rbx/argon-roblox/pull/19))
+
 ## [2.0.20] - 2025-12-10
 
 ### Added
@@ -296,7 +310,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - First Argon 2 plugin pre-release
 
-[unreleased]: https://github.com/argon-rbx/argon-roblox/compare/2.0.20...HEAD
+[unreleased]: https://github.com/argon-rbx/argon-roblox/compare/2.0.21...HEAD
+[2.0.21]: https://github.com/argon-rbx/argon-roblox/compare/2.0.20...2.0.21
 [2.0.20]: https://github.com/argon-rbx/argon-roblox/compare/2.0.19...2.0.20
 [2.0.19]: https://github.com/argon-rbx/argon-roblox/compare/2.0.18...2.0.19
 [2.0.18]: https://github.com/argon-rbx/argon-roblox/compare/2.0.17...2.0.18
