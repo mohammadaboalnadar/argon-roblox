@@ -87,7 +87,7 @@ function App.new()
 		Toolbar = Toolbar {
 			Name = "Dervex Tools",
 		},
-		Name = "Argon",
+		Name = "Argon [MOD]",
 		ToolTip = "Open Argon UI",
 		Image = self.icon,
 
@@ -97,7 +97,7 @@ function App.new()
 	}
 
 	Widget {
-		Name = "Argon",
+		Name = "Argon [MOD]",
 		MinimumSize = peek(self.rootSize),
 		Enabled = isOpen,
 
